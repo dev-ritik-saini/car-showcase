@@ -309,3 +309,27 @@
         gap: 0.5rem;
     }
 }
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+    .gallery-grid {
+        /* Enable GPU acceleration for smoother scrolling */
+        transform: translateZ(0);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .gallery-container {
+        /* Optimize paint */
+        contain: layout style;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+    .gallery-grid,
+    .gallery-container {
+        animation: none;
+        transition: none;
+    }
+}

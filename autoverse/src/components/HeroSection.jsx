@@ -1,18 +1,42 @@
-import React from "react";
+import React, { memo, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, ArrowRight, ChevronDown } from "lucide-react";
 import "./HeroSection.css";
 
-const HeroSection = ({ darkMode }) => {
+const HeroSection = memo(({ darkMode }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const handleImageLoad = useCallback(() => {
+    setImageLoaded(true);
+  }, []);
+
   return (
     <section className={`hero ${darkMode ? "dark" : ""}`}>
       <div className="hero-background">
         <div className="hero-overlay"></div>
-        <img
-          src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80"
-          alt="Luxury Car"
-          className="hero-image"
-        />
+        {/* Optimized hero image with responsive srcset */}
+        <picture>
+          <source
+            media="(max-width: 480px)"
+            srcSet="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=640&q=70"
+          />
+          <source
+            media="(max-width: 768px)"
+            srcSet="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1024&q=75"
+          />
+          <source
+            media="(max-width: 1200px)"
+            srcSet="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1440&q=80"
+          />
+          <img
+            src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920&q=80"
+            alt="Luxury Car"
+            className={`hero-image ${imageLoaded ? "loaded" : ""}`}
+            onLoad={handleImageLoad}
+            fetchpriority="high"
+            decoding="sync"
+          />
+        </picture>
       </div>
 
       <div className="hero-content">
@@ -64,6 +88,8 @@ const HeroSection = ({ darkMode }) => {
       </div>
     </section>
   );
-};
+});
+
+HeroSection.displayName = "HeroSection";
 
 export default HeroSection;

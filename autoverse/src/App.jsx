@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense, useCallback } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,17 +7,27 @@ import {
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Home from "./pages/Home";
-import BMW from "./pages/BMW";
-import Audi from "./pages/Audi";
-import Mercedes from "./pages/Mercedes";
-import Lamborghini from "./pages/Lamborghini";
-import Ferrari from "./pages/Ferrari";
-import Tesla from "./pages/Tesla";
-import SUV from "./pages/SUV";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
+import Home from "./pages/Home"; // Keep Home eagerly loaded for LCP
 import "./index.css";
+
+// Lazy load pages for code splitting
+const BMW = lazy(() => import("./pages/BMW"));
+const Audi = lazy(() => import("./pages/Audi"));
+const Mercedes = lazy(() => import("./pages/Mercedes"));
+const Lamborghini = lazy(() => import("./pages/Lamborghini"));
+const Ferrari = lazy(() => import("./pages/Ferrari"));
+const Tesla = lazy(() => import("./pages/Tesla"));
+const SUV = lazy(() => import("./pages/SUV"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+
+// Loading component for Suspense fallback
+const PageLoader = () => (
+  <div className="page-loader">
+    <div className="page-loader-spinner"></div>
+    <p>Loading...</p>
+  </div>
+);
 
 // ScrollToTop component
 const ScrollToTop = () => {
@@ -30,7 +40,7 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Page transition wrapper
+// Page transition wrapper - optimized
 const PageWrapper = ({ children, darkMode }) => {
   const location = useLocation();
   const [displayChildren, setDisplayChildren] = useState(children);
@@ -45,7 +55,7 @@ const PageWrapper = ({ children, darkMode }) => {
       const timeout = setTimeout(() => {
         setDisplayChildren(children);
         setTransitionStage("fadeIn");
-      }, 300);
+      }, 200); // Reduced from 300ms for snappier feel
       return () => clearTimeout(timeout);
     }
   }, [transitionStage, children]);
@@ -68,33 +78,41 @@ function AppContent() {
     document.body.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+  const toggleDarkMode = useCallback(() => setDarkMode((prev) => !prev), []);
 
   return (
     <div className={`app ${darkMode ? "dark" : ""}`}>
       <ScrollToTop />
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       <main>
-        <PageWrapper darkMode={darkMode}>
-          <Routes>
-            <Route path="/" element={<Home darkMode={darkMode} />} />
-            <Route path="/bmw" element={<BMW darkMode={darkMode} />} />
-            <Route path="/audi" element={<Audi darkMode={darkMode} />} />
-            <Route
-              path="/mercedes"
-              element={<Mercedes darkMode={darkMode} />}
-            />
-            <Route
-              path="/lamborghini"
-              element={<Lamborghini darkMode={darkMode} />}
-            />
-            <Route path="/ferrari" element={<Ferrari darkMode={darkMode} />} />
-            <Route path="/tesla" element={<Tesla darkMode={darkMode} />} />
-            <Route path="/suv" element={<SUV darkMode={darkMode} />} />
-            <Route path="/about" element={<About darkMode={darkMode} />} />
-            <Route path="/contact" element={<Contact darkMode={darkMode} />} />
-          </Routes>
-        </PageWrapper>
+        <Suspense fallback={<PageLoader />}>
+          <PageWrapper darkMode={darkMode}>
+            <Routes>
+              <Route path="/" element={<Home darkMode={darkMode} />} />
+              <Route path="/bmw" element={<BMW darkMode={darkMode} />} />
+              <Route path="/audi" element={<Audi darkMode={darkMode} />} />
+              <Route
+                path="/mercedes"
+                element={<Mercedes darkMode={darkMode} />}
+              />
+              <Route
+                path="/lamborghini"
+                element={<Lamborghini darkMode={darkMode} />}
+              />
+              <Route
+                path="/ferrari"
+                element={<Ferrari darkMode={darkMode} />}
+              />
+              <Route path="/tesla" element={<Tesla darkMode={darkMode} />} />
+              <Route path="/suv" element={<SUV darkMode={darkMode} />} />
+              <Route path="/about" element={<About darkMode={darkMode} />} />
+              <Route
+                path="/contact"
+                element={<Contact darkMode={darkMode} />}
+              />
+            </Routes>
+          </PageWrapper>
+        </Suspense>
       </main>
       <Footer darkMode={darkMode} />
     </div>

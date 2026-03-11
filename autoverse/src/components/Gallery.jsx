@@ -1,20 +1,21 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { Search, X, SearchX } from "lucide-react";
 import CarCard from "./CarCard";
 import ImageModal from "./ImageModal";
 import "./Gallery.css";
 
-const Gallery = ({ cars, title, subtitle, darkMode }) => {
+const Gallery = memo(({ cars, title, subtitle, darkMode }) => {
   const [selectedCar, setSelectedCar] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("default");
 
   const filteredAndSortedCars = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
     let result = cars.filter(
       (car) =>
-        car.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        car.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        car.specs.toLowerCase().includes(searchTerm.toLowerCase()),
+        car.name.toLowerCase().includes(searchLower) ||
+        car.brand.toLowerCase().includes(searchLower) ||
+        car.specs.toLowerCase().includes(searchLower),
     );
 
     if (sortBy === "name") {
@@ -26,13 +27,25 @@ const Gallery = ({ cars, title, subtitle, darkMode }) => {
     return result;
   }, [cars, searchTerm, sortBy]);
 
-  const handleCardClick = (car) => {
+  const handleCardClick = useCallback((car) => {
     setSelectedCar(car);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedCar(null);
-  };
+  }, []);
+
+  const handleSearchChange = useCallback((e) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm("");
+  }, []);
+
+  const handleSortChange = useCallback((e) => {
+    setSortBy(e.target.value);
+  }, []);
 
   return (
     <div className={`gallery-container ${darkMode ? "dark" : ""}`}>
@@ -52,13 +65,16 @@ const Gallery = ({ cars, title, subtitle, darkMode }) => {
               type="text"
               placeholder="Search cars..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
               className="search-input"
+              enterKeyHint="search"
+              autoComplete="off"
             />
             {searchTerm && (
               <button
                 className="clear-search"
-                onClick={() => setSearchTerm("")}
+                onClick={handleClearSearch}
+                aria-label="Clear search"
               >
                 <X size={16} />
               </button>
@@ -68,7 +84,8 @@ const Gallery = ({ cars, title, subtitle, darkMode }) => {
           <select
             className="sort-select"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleSortChange}
+            aria-label="Sort cars"
           >
             <option value="default">Default Order</option>
             <option value="name">Sort by Name</option>
@@ -85,13 +102,12 @@ const Gallery = ({ cars, title, subtitle, darkMode }) => {
         </div>
       ) : (
         <div className="gallery-grid">
-          {filteredAndSortedCars.map((car, index) => (
+          {filteredAndSortedCars.map((car) => (
             <CarCard
               key={car.id}
               car={car}
               onClick={handleCardClick}
               darkMode={darkMode}
-              style={{ animationDelay: `${index * 0.05}s` }}
             />
           ))}
         </div>
@@ -106,6 +122,8 @@ const Gallery = ({ cars, title, subtitle, darkMode }) => {
       )}
     </div>
   );
-};
+});
+
+Gallery.displayName = "Gallery";
 
 export default Gallery;
